@@ -17,7 +17,7 @@ for n =  1:4
     assert(error < tol, 'n=%d, err=%g', n, error);
 end
 
-%% test_trapezoidal_conv_rate
+%% test_trapezoidal2_conv_rate
 % Check empirical convergence rates
 f = @(x) 6*10^8*x - 4*10^6;
 F = @(x) 3*10^8*x^2 - 4*10^6*x; % Anti-derivative
