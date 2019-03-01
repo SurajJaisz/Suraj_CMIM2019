@@ -5,23 +5,25 @@
 
 clc; clear all;
 
-% f = @(x) 6*x - 4;
 f1 = @(x) x^2;
 f2 = @(x) sqrt(x);
 
-% a = 1.2; b = 4.4;
 a = 0; b = 2;
 
-% tol = 1E-14;
 eps1 = 1E-01;
 eps2 = 1E-10;
 
 tol = eps2;
 method = [];
-n = 1;
+n = 1; %starting value
 
-% [integral_1, interval_1, error_1] = adaptive_integration(f1, a, b, tol, method, n)
+[integral_1, interval_1, error_1] = adaptive_integration(f1, a, b, tol, method, n);
 [integral_2, interval_2, error_2] = adaptive_integration(f2, a, b, tol, method, n);
+
+interval_1
+error_1
+interval_2
+error_2
 
 tolerance = linspace(eps1,eps2);
 
@@ -31,11 +33,12 @@ end
 
 figure()
 plot(tolerance, interval_3, 'k-', 'LineWidth',2);
-xlabel('Tolerance', 'FontSize',12, 'FontName', 'Times New Roman')
-ylabel('Step, N', 'FontSize',12, 'FontName', 'Times New Roman')
+xlabel('Tolerance (logarithmic scale)', 'FontSize',12, 'FontName', 'Times New Roman')
+ylabel('Interval, n', 'FontSize',12, 'FontName', 'Times New Roman')
 set(gca, 'XScale', 'log')
 %     set(gca,'FontSize',12, 'FontName', 'Times New Roman', 'XScale', 'log')
 grid on
 hold on
 
+print('plot of interval versus tolerance','-depsc')
 
