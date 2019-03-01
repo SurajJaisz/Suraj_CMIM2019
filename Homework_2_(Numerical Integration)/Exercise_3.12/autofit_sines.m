@@ -7,7 +7,7 @@ clc; clear; close all;
 M = 100;
 t = linspace(-pi, pi, M);
 f = @(t) t/pi;
-N = 3;
+N =3;
 filename = 'Comparison between f(t) and SN(t)';
 
 
@@ -18,16 +18,16 @@ filename = 'Comparison between f(t) and SN(t)';
 b_qsn_e = integrate_coeffs(f, N, 100, t)
 
 % Question (f)
+figure(1)
 plot_approx(f, N, M, filename);
 
 % Question (g)
-plot_approx(f, 3, M, 'Comparison between f(t) and SN(t) for N=3');
-plot_approx(f, 6, M, 'Comparison between f(t) and SN(t) for N=6');
-plot_approx(f, 12, M, 'Comparison between f(t) and SN(t) for N=12');
-plot_approx(f, 24, M, 'Comparison between f(t) and SN(t) for N=24');
+N1 = [3, 6, 12, 24];
+figure(2)
+plot_approx(f, N1, M, 'Comparison between f(t) and SN(t) for different N');
 
 % Question (h)
 f1 =@(t) exp^(-(t-pi));
-plot_approx(f1, 100, M, 'Comparison between f(t) and SN(t) for N=100');
+% plot_approx(f1, 100, M, 'Comparison between f(t) and SN(t) for N=100');
 
 

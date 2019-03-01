@@ -9,8 +9,8 @@ a = t(1);
 b = t(end);
 n = M; % Intervals in the trapezoidal rule
 for k = 1:N
-    f = @(x) f(x)*sin(k*x);
-    b_coeff = (1/pi)*trapezoidal(f, a, b, n);
+    f1 = @(x) f(x)*sin(k*x);
+    b_coeff = (1/pi)*trapezoidal(f1, a, b, n);
     b_total(1,k) = b_coeff;
 end
 
