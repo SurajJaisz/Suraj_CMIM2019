@@ -7,7 +7,10 @@ function Snt = sinesum(t, b, N)
 
 Snt = zeros(size(t));
 
-for n = 1: N
-    Snt = Snt + b(n)*sin(n*t);
+for ii=1:length(t)
+    for n = 1: N
+        Snt(ii) = Snt(ii) + b(n)*sin(n*t(ii));
+    end
 end
+
 end
