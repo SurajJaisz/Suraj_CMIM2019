@@ -5,6 +5,6 @@ function [PE, KE] = osc_energy(u, v, omega)
 % Course:       BK70A0600_07.01.2019 Computational Methods in Mechanics
 % Exercise:     4.10: Compute the energy in oscillations
 
-PE = (1/2)*omega^2*u^2;
-KE = (1/2)*v^2;
+PE = (1/2)*omega^2*u.^2;
+KE = (1/2)*v.^2;
 end
