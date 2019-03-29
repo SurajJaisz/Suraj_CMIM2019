@@ -5,20 +5,24 @@
 
 clc; clear; close all;
 
-% a = 0.1; % in meter
-% b = 0.2; % in meter
-% phi = 30; % in degree
-% omega = 1; % in rad/s
-
-syms a b phi omega
-syms theta d
+a = 0.1; % in meter
+b = 0.2; % in meter
+phi = 30*pi/180; % in radian
+omega = 1; % in rad/s
+syms theta d 
 
 x = [theta;
      d];
- 
 f = [a*cos(phi) + b*cos(theta) - d;
      a*sin(phi) - b*sin(theta)];
- 
-J = jacobian(f, x)
- 
+
+% Solution for f(x)=0 for x for given phi
 S = solve(f==0, x);
+Sol1 = vpa(S.theta*180/pi) % soultion for theta in degree
+Sol2 = vpa(S.d) % solution for d in meter
+
+J = jacobian(f, x);
+
+% matlabFunction(x, 'file', 'X');
+% matlabFunction(f, 'file', 'F');
+% matlabFunction(J, 'file', 'J');
