@@ -1,21 +1,22 @@
+close all; clear; clc;
 % Slider crank kinematic analysis
 %% Coordinates
 % ground
 q1 = [0; 0; 0];
 % crank
-q2 = [-0.1 * cosd(30)
-    0.1 * sind(30)
-    -deg2rad(30)];
+q2 = [-0.1 * cosd(30);
+       0.1 * sind(30);
+      -deg2rad(30)];
 % link
 h_B = 0.2 * sind(30); % y coordinate of point B
 phi_l = asin(h_B / 0.5); % link's angle
-q3 = [-0.2 * cosd(30) - 0.3 * cos(phi_l)
-    h_B - 0.3 * sin(phi_l)
-    phi_l];
+q3 = [-0.2 * cosd(30) - 0.3 * cos(phi_l);
+       h_B - 0.3 * sin(phi_l);
+       phi_l];
 % slider
 q4 = [-0.2 * cosd(30) - 0.5 * cos(phi_l)
-    0
-    0];
+       0
+       0];
 
 q_0 = [q1; q2; q3; q4]; % initial coordinates
 
@@ -95,6 +96,7 @@ C_fun = @(t, q) constraint(revolute, simple, driving, t, q);
 [T, Q] = position_fsolve(C_fun, 1, q_0, 0.1);
 
 %% Some verification plots
+figure(1)
 plot(Q(:, 4), Q(:, 5), ...
     Q(:, 7), Q(:, 8), ...
     Q(:, 10), Q(:, 11), ...
@@ -102,7 +104,7 @@ plot(Q(:, 4), Q(:, 5), ...
 axis equal
 
 %% Jacobian of our constraints
-Cq = constraint_dq(revolute, simple, driving, 0, q_0)
+Cq = constraint_dq(revolute, simple, driving, 0, q_0);
 
 %% Solve constraint equation using NR
 C_fun = @(t, q) constraint(revolute, simple, driving, t, q);
@@ -117,7 +119,7 @@ plot(Q(:, 4), Q(:, 5), ...
 axis equal
 
 %% Verify Ct
-Ct = constraint_dt(revolute, simple, driving, 0, q_0)
+Ct = constraint_dt(revolute, simple, driving, 0, q_0);
 
 %% Solve constraint equation using NR for position and velocity
 C_fun = @(t, q) constraint(revolute, simple, driving, t, q);
@@ -126,6 +128,7 @@ Ct_fun = @(t, q) constraint_dt(revolute, simple, driving, t, q);
 [T, Q, QP] = pos_vel_NR(C_fun, Cq_fun, Ct_fun, 1, q_0, 0.1);
 
 %% Some verification plots
+figure(2)
 plot(Q(:, 4), Q(:, 5), ...
     Q(:, 7), Q(:, 8), ...
     Q(:, 10), Q(:, 11), ...
@@ -134,8 +137,85 @@ axis equal
 
 
 %% Some verification plots
+figure(3)
 plot(QP(:, 4), QP(:, 5), ...
     QP(:, 7), QP(:, 8), ...
     QP(:, 10), QP(:, 11), ...
     0, 0, '*', 'LineWidth', 2);
 axis equal
+
+%% SURAJ TRYING
+
+% Ctt_fun = @(t, q) g(revolute, simple, driving, t, q, QP);
+% [T, QP, QPP] = pos_vel_NR(C_fun, Cq_fun, Ctt_fun, 1, q_0, 0.1);
+
+Ctt_fun = @(t, q, dq) g(revolute, simple, driving, t, q, dq);
+[T, Q, QP, QPP] = pos_vel_acc_NR(C_fun, Cq_fun, Ct_fun, Ctt_fun, 1, q_0, 0.1);
+
+figure(4)
+plot(QPP(:, 4), QPP(:, 5), ...
+    QPP(:, 7), QPP(:, 8), ...
+    QPP(:, 10), QPP(:, 11), ...
+    0, 0, '*', 'LineWidth', 2);
+axis equal
+
+
+%% Slider crank dynamic analysis
+
+inputData.grav = [0; -9.81]; % gravitational acceleration
+
+body1.m = 0; % mass equals to one kg
+body1.l = 0; 
+body1.Ic = body1.m * body1.l^2 / 12; % mass moment of inertia along center of mass in kgm2
+% body1.q = [1;2;3];
+
+body2.m = 2; % mass equals to one kg
+body2.l = 0.2; 
+body2.Ic = body2.m * body2.l^2 / 12; % mass moment of inertia along center of mass in kgm2
+
+body3.m = 2; % mass equals to one kg
+body3.l = 0.5; 
+body3.Ic = body3.m * body3.l^2 / 12; % mass moment of inertia along center of mass in kgm2
+
+body4.m = 0; % mass equals to one kg
+body4.l = 0; 
+body4.Ic = body4.m * body4.l^2 / 12; % mass moment of inertia along center of mass in kgm2
+
+inputData.body = [body1; body2; body3; body4];
+inputData.tspan = 0:0.05:10;
+C_DA_fun = @(t, q) constraint_DynamicAnalysis(revolute, simple, t, q);
+inputData.C_q_fun = @(t, q) constraint_dq_DynamicAnalysis(revolute, simple, t, q); % Jacobian of our constraints
+inputData.G_fun = @(t, q, dq) g_DynamicAnalysis(revolute, simple, t, q, dq);
+h = 0.05; % time-step
+alpha = 1/h;
+beta = sqrt(2)/h;
+inputData.G_Stab_fun = @(t, q, dq) inputData.G_fun(t,q,dq) - 2*alpha*inputData.C_q_fun(t,q)*dq - beta^2*C_DA_fun(t,q); % Applying Baumgarte Stabilization
+q0 = [q_0; zeros(length(q_0), 1)];
+
+options = odeset('Stats', 'on','RelTol',1e-6);
+tic
+% Using ode45 to solve for equations of motion
+[t,y] = ode45(@Dynamic_Analysis_EOM, inputData.tspan, q0, options, inputData);
+toc
+Solun = y';
+
+figure(5)
+for iii = 1:length(inputData.tspan)
+    clf
+    axis equal
+    grid on
+    hold on
+    
+    r1_J1 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[inputData.body(2).l/2;0];
+    r1_J2 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[-inputData.body(2).l/2;0];
+    r2_J2 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[inputData.body(3).l*3/5;0];
+    r2_J3 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[-inputData.body(3).l*2/5;0];
+
+    plot([r1_J1(1), r1_J2(1)], [r1_J1(2), r1_J2(2)], 'b')
+    plot([r2_J2(1), r2_J3(1)], [r2_J2(2), r2_J3(2)], 'r')
+    
+    axis([- 0.7 0.7 -0.7 0.7])
+    pause(0.25)
+    drawnow
+    
+end
