@@ -7,11 +7,13 @@ end
 
 M = mass_matrix(inputData.body);
 F = force_vector(inputData.grav, inputData.body);
+
 C_q = inputData.C_q_fun(t, q(1:12)); % Jacobian of our constraints
+
 G = inputData.G_fun(t, q(1:12), q(13:24));
 G_Stab = inputData.G_Stab_fun(t, q(1:12), q(13:24));
 
-I = zeros(11);
+I = zeros(length(G_Stab));
 
 sysM = [M,   C_q';
         C_q, I];

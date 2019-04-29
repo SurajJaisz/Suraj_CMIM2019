@@ -1,22 +1,20 @@
 close all; clear; clc;
-% Slider crank kinematic analysis
+% Four Bar Mechanism kinematic analysis
 %% Coordinates
 % ground
 q1 = [0; 0; 0];
 % crank
-q2 = [-0.1 * cosd(30);
-       0.1 * sind(30);
-      -deg2rad(30)];
+q2 = [ 0.1 * cosd(45);
+       0.1 * sind(45);
+       deg2rad(45)];
 % link
-h_B = 0.2 * sind(30); % y coordinate of point B
-phi_l = asin(h_B / 0.5); % link's angle
-q3 = [-0.2 * cosd(30) - 0.3 * cos(phi_l);
-       h_B - 0.3 * sin(phi_l);
-       phi_l];
-% slider
-q4 = [-0.2 * cosd(30) - 0.5 * cos(phi_l)
-       0
-       0];
+q3 = [ 0.2 * cosd(45) + 0.1*cosd(0);
+       0.2 * sind(45) + 0.1*sind(0);
+       deg2rad(0)];
+% follower
+q4 = [ 0.2 * cosd(45) + 0.2*cosd(0) - 0.1*cosd(45);
+       0.1 * sind(45);
+       deg2rad(45)];
 
 q_0 = [q1; q2; q3; q4]; % initial coordinates
 
@@ -29,19 +27,25 @@ q_0 = [q1; q2; q3; q4]; % initial coordinates
 revolute(1).i = 1;
 revolute(1).j = 2;
 revolute(1).s_i = [0; 0];
-revolute(1).s_j = [0.1; 0];
+revolute(1).s_j = [-0.1; 0];
 
 % 2 connects crank and link
 revolute(2).i = 2;
 revolute(2).j = 3;
-revolute(2).s_i = [-0.1; 0];
-revolute(2).s_j = [0.3; 0];
+revolute(2).s_i = [0.1; 0];
+revolute(2).s_j = [-0.1; 0];
 
-% 3 connects link and slider
+% 3 connects link and follower
 revolute(3).i = 3;
 revolute(3).j = 4;
-revolute(3).s_i = [-0.2; 0];
-revolute(3).s_j = [0; 0];
+revolute(3).s_i = [0.1; 0];
+revolute(3).s_j = [0.1; 0];
+
+% 4 connects follower and ground
+revolute(4).i = 4;
+revolute(4).j = 1;
+revolute(4).s_i = [-0.1; 0];
+revolute(4).s_j = [0.2; 0];
 
 % % Check revolute joint constraints
 % r = revolute(3);
@@ -62,14 +66,14 @@ simple(3).i = 1;
 simple(3).k = 3;
 simple(3).c_k = 0;
 
-% slider - use simple joints instead of translational
-simple(4).i = 4;
-simple(4).k = 2;
-simple(4).c_k = 0;
-
-simple(5).i = 4;
-simple(5).k = 3;
-simple(5).c_k = 0;
+% % % % slider - use simple joints instead of translational
+% % % simple(4).i = 4;
+% % % simple(4).k = 2;
+% % % simple(4).c_k = 0;
+% % % 
+% % % simple(5).i = 4;
+% % % simple(5).k = 3;
+% % % simple(5).c_k = 0;
 
 % % check simple constraints
 % for s = simple
@@ -146,9 +150,6 @@ axis equal
 
 %% Rest of the code is written by SURAJ JAISWAL
 
-% Ctt_fun = @(t, q) g(revolute, simple, driving, t, q, QP);
-% [T, QP, QPP] = pos_vel_NR(C_fun, Cq_fun, Ctt_fun, 1, q_0, 0.1);
-
 Ctt_fun = @(t, q, dq) g(revolute, simple, driving, t, q, dq);
 [T, Q, QP, QPP] = pos_vel_acc_NR(C_fun, Cq_fun, Ct_fun, Ctt_fun, 1, q_0, 0.1);
 
@@ -160,7 +161,7 @@ plot(QPP(:, 4), QPP(:, 5), ...
 axis equal
 
 
-%% Slider crank dynamic analysis
+%% Four Bar Mechanism dynamic analysis
 
 inputData.grav = [0; -9.81]; % gravitational acceleration
 
@@ -174,11 +175,11 @@ body2.l = 0.2;
 body2.Ic = body2.m * body2.l^2 / 12; % mass moment of inertia along center of mass in kgm2
 
 body3.m = 2; % mass equals to one kg
-body3.l = 0.5; 
+body3.l = 0.2; 
 body3.Ic = body3.m * body3.l^2 / 12; % mass moment of inertia along center of mass in kgm2
 
 body4.m = 2; % mass equals to one kg
-body4.l = 0; 
+body4.l = 0.2; 
 body4.Ic = body4.m * body4.l^2 / 12; % mass moment of inertia along center of mass in kgm2
 
 inputData.body = [body1; body2; body3; body4];
@@ -207,15 +208,19 @@ for iii = 1:length(inputData.tspan)
     grid minor
     hold on
     
-    r1_J1 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[inputData.body(2).l/2;0];
-    r1_J2 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[-inputData.body(2).l/2;0];
-    r2_J2 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[inputData.body(3).l*3/5;0];
-    r2_J3 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[-inputData.body(3).l*2/5;0];
+    r1_J1 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[-inputData.body(2).l/2;0];
+    r1_J2 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[inputData.body(2).l/2;0];
+    r2_J2 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[-inputData.body(3).l/2;0];
+    r2_J3 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[inputData.body(3).l/2;0];
+    r3_J3 = [Solun(10,iii);Solun(11,iii)] + [cos(Solun(12,iii)) -sin(Solun(12,iii)); sin(Solun(12,iii)) cos(Solun(12,iii))]*[-inputData.body(4).l/2;0];
+    r3_J4 = [Solun(10,iii);Solun(11,iii)] + [cos(Solun(12,iii)) -sin(Solun(12,iii)); sin(Solun(12,iii)) cos(Solun(12,iii))]*[inputData.body(4).l/2;0];
 
+    
     plot([r1_J1(1), r1_J2(1)], [r1_J1(2), r1_J2(2)], 'LineWidth',2)
     plot([r2_J2(1), r2_J3(1)], [r2_J2(2), r2_J3(2)], 'LineWidth',2)
+    plot([r3_J3(1), r3_J4(1)], [r3_J3(2), r3_J4(2)], 'LineWidth',2)
     
-    axis([- 0.75 0.25 -0.25 0.25])
+    axis([- 0.25 0.45 -0.25 0.25])
     pause(0.25)
     drawnow
     
