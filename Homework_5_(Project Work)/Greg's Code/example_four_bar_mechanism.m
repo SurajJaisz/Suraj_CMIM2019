@@ -1,4 +1,10 @@
+% Created by:   Suraj Jaiswal
+% Date:         29.04.2019
+% Course:       BK70A0600_07.01.2019 Computational Methods in Mechanics
+% Exercise:     Four Bar Mechanism Analysis
+
 close all; clear; clc;
+
 % Four Bar Mechanism kinematic analysis
 %% Coordinates
 % ground
@@ -7,7 +13,7 @@ q1 = [0; 0; 0];
 q2 = [ 0.1 * cosd(45);
        0.1 * sind(45);
        deg2rad(45)];
-% link
+% link/connecting rod
 q3 = [ 0.2 * cosd(45) + 0.1*cosd(0);
        0.2 * sind(45) + 0.1*sind(0);
        deg2rad(0)];
@@ -100,12 +106,12 @@ C_fun = @(t, q) constraint(revolute, simple, driving, t, q);
 [T, Q] = position_fsolve(C_fun, 1, q_0, 0.1);
 
 %% Some verification plots
-figure(1)
-plot(Q(:, 4), Q(:, 5), ...
-    Q(:, 7), Q(:, 8), ...
-    Q(:, 10), Q(:, 11), ...
-    0, 0, '*', 'LineWidth', 2);
-axis equal
+% figure(1)
+% plot(Q(:, 4), Q(:, 5), ...
+%     Q(:, 7), Q(:, 8), ...
+%     Q(:, 10), Q(:, 11), ...
+%     0, 0, '*', 'LineWidth', 2);
+% axis equal
 
 %% Jacobian of our constraints
 Cq = constraint_dq(revolute, simple, driving, 0, q_0);
@@ -116,11 +122,11 @@ Cq_fun = @(t, q) constraint_dq(revolute, simple, driving, t, q);
 [T, Q] = position_NR(C_fun, Cq_fun, 1, q_0, 0.1);
 
 %% Some verification plots
-plot(Q(:, 4), Q(:, 5), ...
-    Q(:, 7), Q(:, 8), ...
-    Q(:, 10), Q(:, 11), ...
-    0, 0, '*', 'LineWidth', 2);
-axis equal
+% plot(Q(:, 4), Q(:, 5), ...
+%     Q(:, 7), Q(:, 8), ...
+%     Q(:, 10), Q(:, 11), ...
+%     0, 0, '*', 'LineWidth', 2);
+% axis equal
 
 %% Verify Ct
 Ct = constraint_dt(revolute, simple, driving, 0, q_0);
@@ -138,6 +144,13 @@ plot(Q(:, 4), Q(:, 5), ...
     Q(:, 10), Q(:, 11), ...
     0, 0, '*', 'LineWidth', 2);
 axis equal
+grid on;
+grid minor;
+xlabel('Position, ${q_x}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+ylabel('Position, ${q_y}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+legend({'Crank','Connection rod','Follower','Origin'},'FontSize',12, 'FontName', 'Times New Roman', 'location', 'best')
+set(gca,'FontSize',12, 'FontName', 'Times New Roman');
+print('Figure1_Position_FourBarMechanism','-depsc')
 
 
 %% Some verification plots
@@ -147,8 +160,17 @@ plot(QP(:, 4), QP(:, 5), ...
     QP(:, 10), QP(:, 11), ...
     0, 0, '*', 'LineWidth', 2);
 axis equal
+grid on;
+grid minor;
+xlabel('Velocity, ${{\dot{q}}_x}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+ylabel('Velocity, ${{\dot{q}}_y}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+legend({'Crank','Connection rod','Follower','Origin'},'FontSize',12, 'FontName', 'Times New Roman', 'location', 'best')
+set(gca,'FontSize',12, 'FontName', 'Times New Roman');
+print('Figure2_Velocity_FourBarMechanism','-depsc')
 
 %% Rest of the code is written by SURAJ JAISWAL
+
+% Kinematic analysis on acceleration level
 
 Ctt_fun = @(t, q, dq) g(revolute, simple, driving, t, q, dq);
 [T, Q, QP, QPP] = pos_vel_acc_NR(C_fun, Cq_fun, Ct_fun, Ctt_fun, 1, q_0, 0.1);
@@ -159,6 +181,13 @@ plot(QPP(:, 4), QPP(:, 5), ...
     QPP(:, 10), QPP(:, 11), ...
     0, 0, '*', 'LineWidth', 2);
 axis equal
+grid on;
+grid minor;
+xlabel('Acceleration, ${{\ddot{q}}_x}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+ylabel('Acceleration, ${{\ddot{q}}_y}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+legend({'Crank','Connection rod','Follower','Origin'},'FontSize',12, 'FontName', 'Times New Roman', 'location', 'best')
+set(gca,'FontSize',12, 'FontName', 'Times New Roman');
+print('Figure3_Acceleration_FourBarMechanism','-depsc')
 
 
 %% Four Bar Mechanism dynamic analysis
@@ -183,14 +212,20 @@ body4.l = 0.2;
 body4.Ic = body4.m * body4.l^2 / 12; % mass moment of inertia along center of mass in kgm2
 
 inputData.body = [body1; body2; body3; body4];
+
 inputData.tspan = 0:0.05:10;
+
 C_DA_fun = @(t, q) constraint_DynamicAnalysis(revolute, simple, t, q);
+
 inputData.C_q_fun = @(t, q) constraint_dq_DynamicAnalysis(revolute, simple, t, q); % Jacobian of our constraints
+
 inputData.G_fun = @(t, q, dq) g_DynamicAnalysis(revolute, simple, t, q, dq);
+
 h = 0.05; % time-step
 alpha = 1/h;
 beta = sqrt(2)/h;
 inputData.G_Stab_fun = @(t, q, dq) inputData.G_fun(t,q,dq) - 2*alpha*inputData.C_q_fun(t,q)*dq - beta^2*C_DA_fun(t,q); % Applying Baumgarte Stabilization
+
 q0 = [q_0; zeros(length(q_0), 1)];
 
 options = odeset('Stats', 'on','RelTol',1e-6);
@@ -200,12 +235,13 @@ tic
 toc
 Solun = y';
 
+% Animation of Dynamic Analysis
 figure(5)
 for iii = 1:length(inputData.tspan)
     clf
-    axis equal
-    grid on
-    grid minor
+%     axis equal
+%     grid on
+%     grid minor
     hold on
     
     r1_J1 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[-inputData.body(2).l/2;0];
@@ -214,14 +250,24 @@ for iii = 1:length(inputData.tspan)
     r2_J3 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[inputData.body(3).l/2;0];
     r3_J3 = [Solun(10,iii);Solun(11,iii)] + [cos(Solun(12,iii)) -sin(Solun(12,iii)); sin(Solun(12,iii)) cos(Solun(12,iii))]*[-inputData.body(4).l/2;0];
     r3_J4 = [Solun(10,iii);Solun(11,iii)] + [cos(Solun(12,iii)) -sin(Solun(12,iii)); sin(Solun(12,iii)) cos(Solun(12,iii))]*[inputData.body(4).l/2;0];
-
     
     plot([r1_J1(1), r1_J2(1)], [r1_J1(2), r1_J2(2)], 'LineWidth',2)
     plot([r2_J2(1), r2_J3(1)], [r2_J2(2), r2_J3(2)], 'LineWidth',2)
     plot([r3_J3(1), r3_J4(1)], [r3_J3(2), r3_J4(2)], 'LineWidth',2)
+    plot(0,0, '*', 'LineWidth', 4)
+    plot(0.2,0, '*', 'LineWidth', 4)
     
     axis([- 0.25 0.45 -0.25 0.25])
-    pause(0.25)
+    
+    grid on;
+    grid minor;
+    xlabel('Position, ${q_x}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+    ylabel('Position, ${q_y}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+    legend({'Crank','Connection rod','Follower','Origin (ground)','Ground'},'FontSize',12, 'FontName', 'Times New Roman', 'location', 'best')
+    title('Dynamic Analysis of Four Bar Mechanism','FontSize',12, 'FontName', 'Times New Roman')
+    set(gca,'FontSize',12, 'FontName', 'Times New Roman');
+    
+    pause(0.05)
     drawnow
     
 end
