@@ -213,7 +213,7 @@ body4.Ic = body4.m * body4.l^2 / 12; % mass moment of inertia along center of ma
 
 inputData.body = [body1; body2; body3; body4];
 
-inputData.tspan = 0:0.05:10;
+inputData.tspan = 0:0.05:5;
 
 C_DA_fun = @(t, q) constraint_DynamicAnalysis(revolute, simple, t, q);
 
